@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <!--script src="js/learning.js"></script>
+    <script src="js/exercice1.js"></script>
+    <script src="js/exercice3.js"></script>
+    <script src="js/exercice4.js"></script>
+    <script src="js/exercice5.js"></script-->
+    <script src="js/exercice6.js"></script>
+    <script src="js/exercice7.js"></script>
+    <script src="js/exercice8.js"></script>
+    <script src="js/exercice10.js"></script>
+    <script src="js/exercice11.js"></script>
+    <script src="js/exercice12.js"></script>
+    <script src="js/exercice14.js"></script>
+</head>
+
+<body>
+    <h1>Tp JavaScript</h1>
+    <script>
+        /*
+        Msg();
+        ladate();
+        document.write("<br>");
+        nomEtAge();
+        volumeCone(50.0, 10.0);
+        tableauPersonne();
+        serie5etoile();
+        serie5etoile4lignes();
+        
+        tableau();*/
+        //random();
+
+    </script>
+    <!-- Exercice 8-->
+    <label >rayon du cercle:</label><input type="number" id="num" name="rayon"></input>
+    <button type="button" onclick="surfaceCercle()">lancer la fonction</button><br/>
+    <h3>response</h3>
+    La surface du cercle est : <span id="resp"></span>
+
+    <hr>
+    <!-- Exercice 10-->
+    <h2>Affiche la table de multiplication par n dans la console</h2>
+    <label>Entrer un nombre de votre choix</label><input type="number" id="numToType" name="valeur"></input>
+    <button type="button" onclick="tablemultiplication()">OK</button>
+    <button type="reset">cancel</button>
+    
+    <hr>
+     <!-- Exercice 11-->
+     <form>
+       <!-- <table>-->
+    <label >Name:</label><input type="text" id="nameToType" name="nom"></input><br/>
+    <label >Age:</label><input type="number" id="ageToType" name="age"></input><br/>
+    <label >Email:</label><input type="text" id="emailToType" name="email"></input><br/>
+    <label>Veuillez remplir ous les champs</label><button type="button" onclick="salutation()">OK</button>
+    <h3>Response</h3>
+    message :<span id="resp1"></span>
+         <!-- <table>-->
+    </form>
+  <!--Exercice 12-->
+  <hr>
+  <h2>Exercice12</h2>
+  <form>
+  <input type="number" id="num1ToType" name="valeur1"></input>
+    <select id="op" name="operation">
+        <option value="+">plus</option>
+        <option value="-">moins</option>
+        <option value="x">fois</option>
+        <option value="/">divisé par</option>
+   </select>        
+  <input type="number" id="num2ToType" name="valeur2"></input>
+  <button type="button" onclick="CalcSwitch()">Valider</button>
+</form>
+<h3>Response</h3>
+message :<span id="resp2"></span>
+
+<!--Exercice 14-->
+<hr>
+<form id="conv">
+<label >Entrez une somme:</label><input type="number" id="sommeToType" name="somme"></input><br/>
+<label><input type="radio"name="currency" value="euro" >Conversion $ -> €</label><br/>
+<label><input type="radio"name="currency" value="dollar" >Conversion € -> $</label><br/>
+<button type="button" onclick="conversion()">Valider</button>
+</form>
+<h3>Response</h3>
+message :<span id="resp3"></span>
+
+</body>
+
+</html>

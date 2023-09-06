@@ -1,0 +1,417 @@
+
+CREATE TABLE Employe
+(matricule NUMBER(5) CONSTRAINT pk_emp PRIMARY KEY,
+ nom VARCHAR(30) CONSTRAINT nn_emp_nom NOT NULL,
+ prenom VARCHAR(30) CONSTRAINT nn_emp_prenom NOT NULL,
+ salaire NUMBER(6) CONSTRAINT ck_emp_salaire
+		CHECK (salaire >=35000),
+ couriel VARCHAR(50) CONSTANT uq_emp_couriel UNIQUE,
+ id_dept NUMBER(3) CONSTRAINT fk_dept REFERENCES Departement(id_dept)
+ 
+ );
+ 
+ 
+ --SELECT raisonsociale
+--FROM Client
+--WHERE raisonsociale LIKE '%\_%' ESCAPE '\'
+--;
+
+SELECT *FROM Client
+--WHERE codepostal IN (60000,95000)
+--;
+SELECT raisonsociale, codepostal
+FROM Client
+WHERE codepostal BETWEEN '60000' AND '950000'
+;
+
+SELECT idclient, raisonsociale
+FROM Client
+WHERE idclient = 1 OR idclient = 5
+;
+SELECT raisnsociale
+FROM Client
+WHERE raisonsociale LIKE '_A%'
+;
+SELECT raisonsociale, codepostal
+FROM client
+WHERE codepostal LIKE '3%';
+
+SELECT raisonsociale, codepostal
+FROM client
+WHERE raisonsociale NOT LIKE 'C%';
+
+--DEFINE ville ='la source'
+--UNDEFINE ville;
+SELECT raisonsociale, ville, &var
+FROM Client
+WHERE upper(ville) NOT LIKE upper('&ville');
+
+
+SELECT raisonsociale, codepostal
+FROM client
+WHERE raisonsociale LIKE '_R%';
+
+ALTER SESSION set nls_date_format = 'Day DD Month YYYY';
+ALTER SESSION set nls_language = 'french';
+SELECT numcom, TO_CHAR(datecom,'Day DD Month YYYY') FROM Commande;
+--WHERE TO_CHAR(datecom, 'DD/MM/YY')= '25/12/21';
+
+SELECT RPAD(raisonsociale, 10 , '+')
+FROM Client;
+
+SELECT sysdate+1, TO_CHAR(current_date+1/24,'HH24:MI:SS') FROM Dual;
+SELECT numcom,datecom
+FROM Commande
+--WHERE datecom <= ADD_MONTHS(current_date,-3)
+--WHERE MONTHS BETWEEN(current_date, datecom) >= 3
+;
+SELECT prenomrep
+FROM Representant
+--WHERE upper(substr(prenomrep,1,1)) BETWEEN 'D' AND 'M'
+--WHERE ascii (upper(prenomrep)) BETWEEN 68 AND 78
+;
+SELECT prenomrep, nomrep
+FROM Representant
+WHERE (upper(substr(prenomrep,1,1)) BETWEEN 'D' AND 'R') AND 
+(upper(substr(nomrep,1,1)) IN('L','S'))
+;
+SELECT prenomrep, nomrep, adresse
+FROM Representant
+WHERE adresse LIKE upper('_r%');
+
+SELECT raisonsociale, idarticle
+FROM Client INNER JOIN Commande USING(idclient)
+INNER JOIN Ligne_com USING(numcom);
+
+SELECT cl.raisonsociale, COALESCE(TO_CHAR(co.numcom),'Pas de commande')
+--COALESCE est une gnéralisation de NVL
+FROM Client cl LEFT JOIN Commande co USING(idclient)
+;
+
+SELECT cl.raisonsociale,
+CASE WHEN co.numcom IS NOT NULL THEN TO_CHAR(co.numcom)
+ELSE 'Pas de commane'
+END "Commande"
+FROM Client cl LEFT JOIN Commande co USING(idclient)
+;
+SELECT Ar.designation, Ar.idarticle, Lc.idarticle
+FROM Article Ar LEFT OUTER JOIN Ligne_com Lc  
+ON (Lc.idarticle = ar.idarticle)
+WHERE Lc.idarticle is NULL;
+
+SELECT Ar.designation, Ar.idarticle, co.datecom
+FROM Article Ar INNER JOIN Ligne_com Lc
+ON (Lc.idarticle = ar.idarticle)
+INNER JOIN Commande co ON (co.numcom = lc.numcom)
+WHERE TO_CHAR(co.datecom, 'MM/YYYY') = '02/2022'
+;
+
+SELECT cl.raisonsociale, co.datecom
+FROM client cl JOIN Commande co USING (idclient)
+WHERE TO_CHAR(co.datecom, 'YYYY') = TO_CHAR(current_date, 'YYYY')
+WHERE EXTRACT(year FROM co.datecom)= EXTRACT (year FROM current_date)
+;
+---Nombre de commande
+SELECT COUNT(numcom)
+FROM Commande
+;
+--Nombre d'article différents par commande
+SELECT numcom, COUNT(numcom)
+FROM Ligne_com
+GROUP BY numcom;
+
+--Montant total de toutes les commandes
+SELECT SUM(lc.qtecom*a.prixunit)
+FROM Article a INNER JOIN Ligne_com lc USING(idarticle);
+
+---Montant des commandes par année
+SELECT TO_CHAR(co.datecom, 'YYYY'), SUM(Lc.qtecom*Ar.prixunit)
+FROM Article Ar INNER JOIN Ligne_com Lc
+ON (Lc.idarticle = ar.idarticle)
+INNER JOIN Commande co ON (co.numcom = Lc.numcom)
+GROUP BY TO_CHAR(co.datecom, 'YYYY');
+--Montant moyen d'un article
+SELECT AVG(SUM(Lc.qtecom*Ar.prixunit))--Solution 1
+FROM Article Ar INNER JOIN Ligne_com Lc
+ON (Lc.idarticle = ar.idarticle)
+GROUP BY lc.numcom;
+
+SELECT SUM(Lc.qtecom*Ar.prixunit)/COUNT(DISTINCT lc.numcom)--Solution 2
+FROM Article Ar INNER JOIN Ligne_com Lc
+ON (Lc.idarticle = ar.idarticle);
+
+
+SELECT cl.raisonsociale,
+   LISTAGG (a.designation, '-') WITHIN GROUP (ORDER BY a.designation)
+   "Liste des articles"
+FROM Client cl JOIN Commande co
+    ON (cl.idclient = co.idclient)
+    JOIN Ligne_com lc
+    ON (lc.numcom=co.numcom)
+    JOIN  Article a
+        ON (a.idarticle=lc.idarticle)
+GROUP BY cl.raisonsociale
+ORDER BY cl.raisonsociale;
+
+---Representants qui n'ont pas de clients
+SELECT r.nomrep, r.prenomrep, COUNT(idclient)
+FROM Representant r LEFT JOIN Client Cl
+   ON (r.idrep=cl.idrep)
+GROUP BY r.nomrep, r.prenomrep
+HAVING COUNT(idclient)=0;
+
+--article dont le prix en inférieure à la moyenne
+
+SELECT designation
+FROM Article 
+WHERE prixunit < (SELECT AVG(prixunit)
+                FROM Article);
+
+--
+SELECT a.designation, a.qtestock, SUM(lc1.qtecom)
+FROM Article a JOIN Ligne_com lc1
+     ON (a.idarticle = lc1.idarticle)
+WHERE a.qtestock > (SELECT SUM(lc.qtecom)
+                     FROM Ligne_com lc
+                     WHERE a.idarticle = lc.idarticle)
+GROUP BY a.designation, a.qtestock;
+
+--4Liste des articles par commandés
+SELECT a.designation
+FROM Article a
+WHERE a.idarticle NOT IN (SELECT lc.idarticle
+                   FROM Ligne_com lc);
+
+--5
+SELECT a.designation, lc.qtecom
+FROM Article a JOIN Ligne_com lc
+    ON (lc.idarticle = a.idarticle)
+WHERE lc.qtecom = (SELECT MAX(lc1.qtecom)
+            FROM ligne_com lc1
+            WHERE lc1.numcom = lc.numcom);
+--FROM Client
+--WHERE TO_CHAR
+--1,2,4,5
+----HR1
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+ACCEPT v_annee PROMPT "entrez une année:";
+DECLARE
+v_Mesg VARCHAR2(80);
+
+BEGIN
+IF MOD(&v_annee,4) = 0 AND MOD(&v_annee,100)!= 0 OR MOD(&v_annee,400)=0
+    THEN v_Mesg := ' l''année '|| &v_annee|| ' est bissextile ';
+ELSE
+    v_Mesg := 'l''année '|| &v_annee|| ' n''est pas bissextile ';
+END IF;
+dbms_output.put_line (v_Mesg) ;
+END;
+
+
+--HR2
+
+SET SERVEROUTPUT ON ;
+DECLARE 
+v_salaireMoyen employees.salary%TYPE;
+v_salare employees.salary%TYPE;
+v_Mesg VARCHAR2(80); 
+
+BEGIN 
+SELECT  AVG(salary) INTO v_salaireMoyen FROM employees;
+INSERT INTO rapport (col2)
+VALUES(v_salaireMoyen);
+v_Mesg := 'Aujourd''hui le '|| TO_CHAR(sysdate, 'DD/MM/YYYY');
+dbms_output.put_line (v_Mesg) ;
+END;
+
+
+
+--HR3
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+v_salaire employees.salary%TYPE;
+nbre_total NUMBER(10);
+v_stars VARCHAR(10);
+BEGIN
+SELECT salary INTO v_salaire FROM Employees WHERE employee_id = 150;
+nbre_total := ROUND(v_salaire/1000);
+FOR i IN 1..nbre_total
+LOOP
+v_stars := v_stars||'*';
+END LOOP;
+UPDATE EMP
+SET stars= v_stars WHERE employee_id = 150;
+END;
+
+
+
+--HR4
+CREATE TABLE EMP
+AS SELECT * FROM Employees;
+ALTER TABLE Emp
+ADD stars VARCHAR(200);
+
+ALTER TABLE Emp
+DROP (stars) ;
+
+--HR5
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+v_MaxSalaire employees.salary%TYPE;
+v_salaire employees.salary%TYPE;
+idMin employees.employee_id%TYPE;
+idMax employees.employee_id%TYPE;
+v_stars VARCHAR(200);
+BEGIN
+SELECT MAX(salary) INTO v_MaxSalaire FROM Employees;
+SELECT MAX(employee_id), MIN(employee_id) INTO idMax, idMin FROM Employees;
+
+FOR i IN idMin..idMax
+LOOP
+    SELECT salary INTO v_salaire FROM Employees WHERE employee_id=i;
+        FOR j IN 1..ROUND((v_salaire/v_MaxSalaire)*50)
+        LOOP
+            v_stars := v_stars||'*';   
+        END LOOP;
+  --UPDATE EMP
+  --SET stars= v_stars WHERE employee_id = i;
+END LOOP;
+END;
+
+--HR6
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+TYPE dixPremierdep IS TABLE OF 
+departments.department_name%TYPE 
+INDEX BY PLS_INTEGER;
+my_varDept dixPremierdep;
+v_Mesg VARCHAR2(80);
+
+
+BEGIN
+FOR i IN 1..10
+ LOOP
+ SELECT department_name INTO my_varDept(i) FROM departments
+   WHERE department_id = i*10;
+  END LOOP;
+FOR i IN 1..10
+ LOOP
+ v_Mesg := i|| '  '|| my_varDept(i);
+dbms_output.put_line (v_Mesg) ;
+  END LOOP;
+END;
+
+--HR7
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+CURSOR c_emp is SELECT salary FROM emp
+FOR UPDATE;
+v_stars VARCHAR(200);
+v_MaxSalaire employees.salary%TYPE;
+v_salaire employees.salary%TYPE;
+ 
+BEGIN
+SELECT MAX(salary) INTO v_MaxSalaire FROM Employees;
+    OPEN c_emp;
+    LOOP
+        FETCH c_emp INTO v_salaire;
+        EXIT WHEN c_emp%NOTFOUND;
+        --v_stars := NULL;
+        --SELECT LPAD('*', v_salaire*50/v_MaxSalaire, '*') INTO v_stars FROM emp;
+        UPDATE emp SET stars = LPAD('*', v_salaire*50/v_MaxSalaire, '*')
+        WHERE CURRENT OF c_emp;
+    END LOOP ;
+END;
+--HR8
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+CURSOR c_employe is SELECT first_name, hire_date FROM emp 
+ORDER BY 2 
+FOR UPDATE;
+v_prenom emp.first_name%TYPE;
+v_hiredate emp.hire_date%TYPE;
+v_prenomAnc emp.first_name%TYPE;
+v_hiredateAnc emp.hire_date%TYPE;
+v_AnEmp emp.first_name%TYPE;
+v_Minhiredate emp.hire_date%TYPE;
+ 
+BEGIN
+ OPEN c_employe;
+    FETCH c_employe INTO v_prenom, v_hiredate;
+    dbms_output.put_line (v_prenom||' a été employé(e) le '|| v_hiredate);
+    --FETCH c_employe INTO v_Minhiredate;
+    LOOP 
+    v_prenomAnc:= v_prenom;
+    v_hiredateAnc :=v_hiredate;
+        FETCH c_employe INTO v_prenom, v_hiredate ;
+        EXIT WHEN c_employe%NOTFOUND;
+        dbms_output.put_line (RPAD(v_prenom,15,' ') || ' a été embauché(e)  ' 
+        || LPAD(TO_CHAR(v_hiredate- v_hiredateAnc), 4,' ')|| ' jours avant '|| v_prenomAnc ) ; 
+      
+    END LOOP ;
+END;
+
+
+
+
+--HR9
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON ; 
+DECLARE
+CURSOR c_employe is SELECT first_name, hire_date FROM emp 
+ORDER BY 2 
+FOR UPDATE;
+v_prenom emp.first_name%TYPE;
+v_hiredate emp.hire_date%TYPE;
+v_AnEmp emp.first_name%TYPE;
+v_Minhiredate emp.hire_date%TYPE;
+BEGIN
+ OPEN c_employe;
+    FETCH c_employe INTO v_AnEmp, v_Minhiredate;
+    dbms_output.put_line (v_AnEmp||' '|| v_Minhiredate);
+    --FETCH c_employe INTO v_Minhiredate;
+    
+END;
+
+
+TRIGGER
+--SELECT USER FROM DUAL;
+--SELECT salairemoyen(10) FROM DUAL;
+/*CREATE TABLE activite
+(evt_date DATE,
+Nom VARCHAR2(20),
+Action VARCHAR2(10)
+) ;*/
+
+CREATE OR REPLACE TRIGGER Tracker
+BEFORE
+DELETE OR INSERT OR UPDATE ON employees
+
+BEGIN
+    IF inserting THEN
+        INSERT INTO  Activite
+        VALUES (sysdate, user, 'INSERT');
+    ELSIF deleting THEN
+        INSERT INTO Activite
+        VALUES (sysdate, user, 'DELETE');
+    ELSIF updating THEN
+        INSERT INTO Activite
+        VALUES (sysdate, user, 'UPDATE');
+END IF;
+END ;
+
+
+UPDATE Employees
+SET salary = salary*2 WHERE employee_id =30;

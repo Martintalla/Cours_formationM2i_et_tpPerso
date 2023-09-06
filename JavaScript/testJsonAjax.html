@@ -1,0 +1,21 @@
+<!DOCTYPEhtml>
+    <html>
+    <metacharset="utf-8" />
+
+    <body>
+        <script>
+            //CreateanXMLHttpRequestobject
+            var xmlhttp = new XMLHttpRequest()
+
+            //Defineacallbackfunction
+            xmlhttp.onload = function () {
+                let data = JSON.parse(this.responseText)
+                console.log(data)
+            }
+            //Sendarequest
+            xmlhttp.open("GET", "https://geo.api.gouv.fr/regions")
+            xmlhttp.send()
+        </script>
+    </body>
+
+    </html>

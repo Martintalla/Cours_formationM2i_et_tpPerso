@@ -1,0 +1,17 @@
+div{
+width: 308px;
+height: 150px;
+background-color: white;
+border: 1pxsolidblack;
+}
+button{
+width: 100px;
+border: 1pxsolidblack;
+}
+span{
+    color: blueviolet;
+}
+h3{
+    color: brown ;
+    text-decoration: underline;
+}
